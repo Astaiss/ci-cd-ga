@@ -1,6 +1,8 @@
 name: Auto Merge and Deploy
 
 on:
+  pull_request:
+    types: [opened, synchronize, reopened]
   pull_request_target:
     types: [opened, synchronize, reopened]
 
@@ -12,23 +14,25 @@ jobs:
   automerge:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout PR
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-      - name: Check for index.html
+      - name: Verify index.html exists
+        id: check-file
         run: |
-          if [ ! -f index.html ]; then
-            echo "No index.html. Canceling."
-            exit 1
+          if [ -f "index.html" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Automerge if index.html is present
+      - name: Auto-merge PR
+        if: steps.check-file.outputs.exists == 'true'
         uses: pascalgn/automerge-action@v0.16.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           merge-method: squash
           skip-review: true
+          skip-approvals: true
+          merge-commit-message: "Auto-merged: PR #${{ github.event.number }}"
