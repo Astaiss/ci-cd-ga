@@ -1,4 +1,4 @@
-name: Auto-Merge & Deploy with index.html
+name: Auto Merge and Deploy
 
 on:
   pull_request_target:
@@ -12,7 +12,7 @@ jobs:
   automerge:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout PR branch
+      - name: Checkout PR
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
@@ -21,15 +21,14 @@ jobs:
       - name: Check for index.html
         run: |
           if [ ! -f index.html ]; then
-            echo "index.html not found. Canceling merge."
+            echo "No index.html. Canceling."
             exit 1
           fi
 
-      - name: Auto-merge pull request
+      - name: Automerge if index.html is present
         uses: pascalgn/automerge-action@v0.16.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           merge-method: squash
-          merge-labels: ''
           skip-review: true
